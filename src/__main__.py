@@ -1,6 +1,7 @@
 from src.func import *  # Імпортуємо модуль, який містить функції обробки контактів та читання/збереження файлу
 from src.dec import *  # Імпортуємо модуль, який містить функцію-декоратор
-from src.clas import AddressBook
+from src.clas import AddressBook, Notes
+import sys # Імпортуємо модуль для роботи з аргументами командного рядка.
 
 def parse_input(user_input):  # Метод для обробки вводу користувача
     cmd, *args = user_input.split()  # Розділяємо ввід користувача, як команду та параметри
@@ -9,6 +10,7 @@ def parse_input(user_input):  # Метод для обробки вводу ко
 	
 @input_error  # Огортаємо основну функцію функцією-декоратором
 def main(book: AddressBook):  # Головна функція бота
+    notes = Notes()
     print("Hello! Welcome to the assistant bot!")  # Виводимо привітання від бота
 
     while True:
@@ -30,8 +32,10 @@ def main(book: AddressBook):  # Головна функція бота
                 - add-birthday (add birthday for contact),
                 - show-birthday (show birthday for contact),
                 - birthdays (show upcoming birthdays),
+                - find-notes <keyword> (find notes by keyword),
+                - find-notes-tags <tag> (find notes by tag)
                 - help (print this message),
-                - close or exit (end of work)""")
+                - close or exit (end of work),""")
 
         else:
             cmd, args = parse_input(command)  # Визначаєто яку функцію ініціює користувач
@@ -49,10 +53,16 @@ def main(book: AddressBook):  # Головна функція бота
                 print(show_birthday(args, book))
             elif cmd == "birthdays":
                 print(birthdays(args, book))
+            elif command.startswith("find-notes "):
+                cmd, args = parse_input(command)  
+                print(find_notes(args, notes))
+            elif command.startswith("find-notes-tags "):
+                cmd, args = parse_input(command)  
+                print(find_notes_by_tag(args, notes))
             else:
                 print("Invalid command.")  # Вивід повідомлення коли команда не відповідає поточному функціоналу
 
 if __name__ == "__main__":  # Перевіряємо, чи запущено цей файл як основний скрипт
     book = load_data() # Виклик функції для перевірки наявності файлу з контактами
-    main(book)  # Запускаємо основну функцію
+    main(book, sys.argv[1:])  # Передаємо аргументи командного рядка до функції main
     save_data(book)  # Виклик функції для збереження перед виходом з програми

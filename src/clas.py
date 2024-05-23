@@ -1,5 +1,6 @@
 from collections import UserDict  # Імпортуємо метод для роботи з словниками
 from datetime import datetime, timedelta  # Імпортуємо метод для роботи з датою
+import json # Імпортуємо метод для роботи з json-файлами
 
 class Field:  # Створюємо базовий клас для роботи з даними
     def __init__(self, value):
@@ -156,3 +157,68 @@ class AddressBook(UserDict):  # Клас для словника адресно�
             address_book.add_record(record)
         return address_book
     
+class Note: # Похідний клас для роботи з нотатками
+    def __init__(self, title, content, tags=None): # Ініціалізуємо нову нотатку з заголовком, вмістом та тегами.
+        self.title = title
+        self.content = content
+        self.tags = tags if tags else []
+
+    def __str__(self): # Повертаємо рядкове представлення нотатки
+        tags_str = ', '.join(self.tags)
+        return f"Title: {self.title}, Content: {self.content}, Tags: {tags_str}"
+
+    def to_dict(self): # Конвертуємо нотатку в словник для збереження у файл
+        return {
+            "title": self.title,
+            "content": self.content,
+            "tags": self.tags
+        }
+    
+    @classmethod
+    def from_dict(cls, data): # Створюємо об'єкт нотатки зі словника (для завантаження з файлу)
+        return cls(data['title'], data['content'], data.get('tags', []))
+    
+
+class Notes: # Похідний клас для представлення колекцій нотаток та керування ними
+    def __init__(self, notes_file='notes.json'):
+        self.notes = []
+        self.notes_file = notes_file
+        self.load_from_file()
+
+    def add_note(self, title, content, tags=None): # Додаємо нову нотатку до колекції
+        new_note = Note(title, content, tags)
+        self.notes.append(new_note)
+        self.save_to_file()
+
+    def remove_note(self, title): # Видаляємо нотатку з колекції за заголовком.
+        self.notes = [note for note in self.notes if note.title != title]
+        self.save_to_file()
+
+    def edit_note(self, title, new_content=None, new_tags=None): # Редагуємо вміст або теги нотатки
+        for note in self.notes:
+            if note.title == title:
+                if new_content is not None:
+                    note.content = new_content
+                if new_tags is not None:
+                    note.tags = new_tags
+                break
+        self.save_to_file()
+
+    def find_notes(self, keyword): # Знаходимо нотатки за ключовим словом (у заголовку та у вмісті) 
+        return [note for note in self.notes if keyword.lower() in note.content.lower() or keyword.lower() in note.title.lower()]
+
+    def find_notes_by_tag(self, tag): # Знаходимо нотатки нотатки за тегом
+        return [note for note in self.notes if tag.lower() in [t.lower() for t in note.tags]]
+
+    def save_to_file(self): # Зберігаємо всі нотатки у файл
+        with open(self.notes_file, 'w') as f:
+            json.dump({"notes": [note.to_dict() for note in self.notes]}, f, ensure_ascii=False, indent=4)
+
+    def load_from_file(self): # Завантажуємо всі нотатки з файлу
+        try:
+            with open(self.notes_file, 'r') as f:
+                notes_data = json.load(f).get('notes', [])
+                self.notes = [Note.from_dict(note) for note in notes_data]
+        except FileNotFoundError:
+            self.notes = []
+            self.save_to_file() # Створюємо порожній файл, якщо його не існує

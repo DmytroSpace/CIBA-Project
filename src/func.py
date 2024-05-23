@@ -102,4 +102,31 @@ def birthdays(args, book): # Метод для ініціалізації пош
         return "\n".join([f"{birthday['name']}'s birthday is on {birthday['congratulation_date']}." for birthday in upcoming_birthdays])
     else: # Вивід якщо метод не повернув результатом запис
         return "No upcoming birthdays."
+
+
+
+@input_error
+def find_notes(args, notes): # Метод для пошуку нотаток за ключовим словом
+    if len(args) < 1:
+        return "Usage: find-notes <keyword>"
+    keyword = ' '.join(args)
+    found_notes = notes.find_notes(keyword)
+    if found_notes:
+        for note in found_notes:
+            print(note)
+    else:
+        print("No notes found with the given keyword.")
+
+
+@input_error
+def find_notes_by_tag(args, notes): # Метод для пошуку нотаток за тегом
+    if len(args) < 1:
+        return "Usage: find-notes-tags <tag>"
+    tag = args[0]
+    found_notes = notes.find_notes_by_tag(tag)
+    if found_notes:
+        for note in found_notes:
+            print(note)
+    else:
+        print("No notes found with the given tag.")
     
